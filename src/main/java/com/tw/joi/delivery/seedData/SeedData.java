@@ -68,6 +68,8 @@ public class SeedData {
             .store(store)
             .threshold(10)
             .availableStock(30)
+                .sellingPrice(BigDecimal.ONE)
+                .discount(BigDecimal.ZERO)
             .build();
     }
 
