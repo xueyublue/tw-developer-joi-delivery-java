@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.tw.joi.delivery.domain.Cart;
 import com.tw.joi.delivery.dto.request.AddProductRequest;
+import com.tw.joi.delivery.dto.response.CartSummaryResponse;
 import com.tw.joi.delivery.service.CartService;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.Test;
@@ -60,5 +61,23 @@ public class CartControllerTest {
                             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(MockMvcResultMatchers.jsonPath("$.cartId", Is.is("cart101")));
+    }
+
+    @Test
+    void shouldReturnCartSummary() throws Exception {
+        String url = "/cart/summary?userId={userId}";
+        String userId = "user101";
+
+        CartSummaryResponse summaryResponse =
+            new CartSummaryResponse(userId, "cart101", 2, null, null, null);
+
+        when(cartService.getCartSummary(userId)).thenReturn(summaryResponse);
+
+        mockMvc.perform(MockMvcRequestBuilders.get(url, userId)
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.userId", Is.is(userId)))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.cartId", Is.is("cart101")))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.totalItems", Is.is(2)));
     }
 }

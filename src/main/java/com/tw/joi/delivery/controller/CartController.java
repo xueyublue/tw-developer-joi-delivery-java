@@ -3,6 +3,7 @@ package com.tw.joi.delivery.controller;
 import com.tw.joi.delivery.domain.Cart;
 import com.tw.joi.delivery.dto.request.AddProductRequest;
 import com.tw.joi.delivery.dto.response.CartProductInfo;
+import com.tw.joi.delivery.dto.response.CartSummaryResponse;
 import com.tw.joi.delivery.service.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,5 +29,11 @@ public class CartController {
     @GetMapping("/view")
     public ResponseEntity<Cart> viewCart(@RequestParam(name = "userId") String userId) {
         return ResponseEntity.ok(cartService.getCartForUser(userId));
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<CartSummaryResponse> cartSummary(
+        @RequestParam(name = "userId") String userId) {
+        return ResponseEntity.ok(cartService.getCartSummary(userId));
     }
 }
