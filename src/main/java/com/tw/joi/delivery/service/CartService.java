@@ -5,8 +5,7 @@ import com.tw.joi.delivery.domain.GroceryProduct;
 import com.tw.joi.delivery.domain.User;
 import com.tw.joi.delivery.dto.request.AddProductRequest;
 import com.tw.joi.delivery.dto.response.CartProductInfo;
-import com.tw.joi.delivery.seedData.SeedData;
-import java.util.Map;
+import com.tw.joi.delivery.port.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +13,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CartService {
 
-    private final Map<String,Cart> userCarts= SeedData.cartForUsers;
+    private final CartRepository cartRepository;
     private final UserService userService;
     private final ProductService productService;
 
@@ -33,7 +32,7 @@ public class CartService {
     }
 
     private Cart fetchCartForUser(User user) {
-        return userCarts.get(user.getUserId());
+        return cartRepository.findByUserId(user.getUserId());
     }
 
 }
