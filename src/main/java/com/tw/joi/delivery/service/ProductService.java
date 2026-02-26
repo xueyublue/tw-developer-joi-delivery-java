@@ -11,12 +11,16 @@ public class ProductService {
     private final List<GroceryProduct> products= SeedData.groceryProducts;
 
     public GroceryProduct getProduct(String productId, String outletId) {
-        return products.stream()
+        GroceryProduct product = products.stream()
             .filter(groceryProduct ->
                         groceryProduct.getProductId().equals(productId)
                             && groceryProduct.getStore().getOutletId().equals(outletId))
             .findFirst()
             .orElse(null);
+        if (product != null) {
+            product.applyDiscountIfPresent();
+        }
+        return product;
     }
 
 }

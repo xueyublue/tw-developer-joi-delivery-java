@@ -19,12 +19,12 @@ public class CartService {
     private final ProductService productService;
 
     public CartProductInfo addProductToCartForUser(AddProductRequest addProductRequest) {
-        User user=userService.fetchUserById(addProductRequest.getUserId());
+        User user = userService.fetchUserById(addProductRequest.getUserId());
         Cart cart = fetchCartForUser(user);
         GroceryProduct product = productService.getProduct(addProductRequest.getProductId(),
                                                            addProductRequest.getOutletId());
         cart.getProducts().add(product);
-        return new CartProductInfo(cart, product, product.getSellingPrice());
+        return new CartProductInfo(cart, product, product.effectivePrice());
     }
 
     public Cart getCartForUser(String userId) {

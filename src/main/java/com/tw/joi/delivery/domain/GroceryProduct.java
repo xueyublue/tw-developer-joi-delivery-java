@@ -40,4 +40,33 @@ public class GroceryProduct extends Product {
         this.discount = discount;
     }
 
+    public BigDecimal effectivePrice() {
+        if (sellingPrice != null) {
+            return sellingPrice;
+        }
+        return mrp != null ? mrp : BigDecimal.ZERO;
+    }
+
+    public void applyDiscountIfPresent() {
+        if (discount == null || mrp == null || sellingPrice != null) {
+            return;
+        }
+        BigDecimal discounted = mrp.subtract(discount);
+        if (discounted.compareTo(BigDecimal.ZERO) < 0) {
+            discounted = BigDecimal.ZERO;
+        }
+        setSellingPrice(discounted);
+    }
+
+    public void setSellingPrice(BigDecimal sellingPrice) {
+        if (sellingPrice != null && sellingPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Selling price cannot be negative");
+        }
+        if (sellingPrice != null && mrp != null
+            && sellingPrice.compareTo(mrp) > 0) {
+            throw new IllegalArgumentException("Selling price cannot exceed MRP");
+        }
+        this.sellingPrice = sellingPrice;
+    }
+
 }
