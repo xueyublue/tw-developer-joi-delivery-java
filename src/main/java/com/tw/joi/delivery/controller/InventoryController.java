@@ -18,7 +18,9 @@ public class InventoryController {
 
     @GetMapping("/health")
     public ResponseEntity<InventoryHealthResponse> fetchStoreInventoryHealth(
-        @RequestParam(name = "storeId") String storeId) {
-        return ResponseEntity.ok(inventoryService.fetchInventoryHealth(storeId));
+        @RequestParam(name = "storeId") String storeId,
+        @RequestParam(name = "includeProducts", required = false, defaultValue = "true")
+        boolean includeProducts) {
+        return ResponseEntity.ok(inventoryService.fetchInventoryHealth(storeId, includeProducts));
     }
 }

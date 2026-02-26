@@ -2,31 +2,29 @@ package com.tw.joi.delivery.service;
 
 import com.tw.joi.delivery.domain.GroceryProduct;
 import com.tw.joi.delivery.domain.GroceryStore;
-import com.tw.joi.delivery.dto.response.InventoryHealthResponse;
-import com.tw.joi.delivery.dto.response.ProductInventoryHealth;
 import com.tw.joi.delivery.domain.ProductHealthStatus;
 import com.tw.joi.delivery.domain.StoreHealthStatus;
-import com.tw.joi.delivery.seedData.SeedData;
+import com.tw.joi.delivery.dto.response.InventoryHealthResponse;
+import com.tw.joi.delivery.dto.response.ProductInventoryHealth;
+import com.tw.joi.delivery.repository.GroceryProductRepository;
+import com.tw.joi.delivery.repository.GroceryStoreRepository;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class InventoryService {
 
-    private final List<GroceryProduct> products = SeedData.groceryProducts;
+    private final GroceryProductRepository productRepository;
+    private final GroceryStoreRepository storeRepository;
 
-    public InventoryHealthResponse fetchInventoryHealth(String storeId) {
-        List<GroceryProduct> storeProducts = products.stream()
-            .filter(product -> product.getStore() != null
-                && Objects.equals(product.getStore().getOutletId(), storeId))
-            .toList();
+    public InventoryHealthResponse fetchInventoryHealth(String storeId, boolean includeProducts) {
+        GroceryStore store = storeRepository.findById(storeId)
+            .orElseThrow(() -> new StoreNotFoundException(storeId));
 
-        GroceryStore store = storeProducts.stream()
-            .map(GroceryProduct::getStore)
-            .findFirst()
-            .orElse(null);
+        List<GroceryProduct> storeProducts = productRepository.findByStoreId(storeId);
 
         var productHealthList = storeProducts.stream()
             .map(this::toProductInventoryHealth)
@@ -50,13 +48,13 @@ public class InventoryService {
 
         return new InventoryHealthResponse(
             storeId,
-            store != null ? store.getName() : null,
+            store.getName(),
             totalProducts,
             (int) healthyCount,
             (int) lowStockCount,
             (int) outOfStockCount,
             overallStatus,
-            productHealthList
+            includeProducts ? productHealthList : List.of()
         );
     }
 
@@ -91,5 +89,4 @@ public class InventoryService {
         return StoreHealthStatus.HEALTHY;
     }
 }
-
 

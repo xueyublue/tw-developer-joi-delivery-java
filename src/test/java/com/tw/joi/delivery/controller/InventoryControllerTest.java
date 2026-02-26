@@ -30,7 +30,7 @@ class InventoryControllerTest {
 
     @Test
     void shouldReturnTheHealthOfTheStore() throws Exception {
-        String getUrl = "/inventory/health?storeId={storeId}";
+        String getUrl = "/inventory/health?storeId={storeId}&includeProducts={includeProducts}";
         String storeId = "store101";
 
         ProductInventoryHealth productHealth =
@@ -41,9 +41,9 @@ class InventoryControllerTest {
                                         StoreHealthStatus.HEALTHY,
                                         List.of(productHealth));
 
-        when(inventoryService.fetchInventoryHealth(storeId)).thenReturn(response);
+        when(inventoryService.fetchInventoryHealth(storeId, true)).thenReturn(response);
 
-        mockMvc.perform(MockMvcRequestBuilders.get(getUrl, storeId)
+        mockMvc.perform(MockMvcRequestBuilders.get(getUrl, storeId, true)
                             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(
