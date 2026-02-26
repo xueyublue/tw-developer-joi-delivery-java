@@ -5,6 +5,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.tw.joi.delivery.dto.response.InventoryHealthResponse;
 import com.tw.joi.delivery.dto.response.ProductInventoryHealth;
+import com.tw.joi.delivery.domain.ProductHealthStatus;
+import com.tw.joi.delivery.domain.StoreHealthStatus;
 import com.tw.joi.delivery.service.InventoryService;
 import java.util.List;
 import org.hamcrest.core.Is;
@@ -32,9 +34,11 @@ class InventoryControllerTest {
         String storeId = "store101";
 
         ProductInventoryHealth productHealth =
-            new ProductInventoryHealth("product101", "Wheat Bread", 10, 30, "HEALTHY");
+            new ProductInventoryHealth("product101", "Wheat Bread", 10, 30,
+                                       ProductHealthStatus.HEALTHY);
         InventoryHealthResponse response =
-            new InventoryHealthResponse(storeId, "Fresh Picks", 1, 1, 0, 0, "HEALTHY",
+            new InventoryHealthResponse(storeId, "Fresh Picks", 1, 1, 0, 0,
+                                        StoreHealthStatus.HEALTHY,
                                         List.of(productHealth));
 
         when(inventoryService.fetchInventoryHealth(storeId)).thenReturn(response);

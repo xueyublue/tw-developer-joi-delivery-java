@@ -3,6 +3,7 @@ package com.tw.joi.delivery.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.tw.joi.delivery.dto.response.InventoryHealthResponse;
+import com.tw.joi.delivery.domain.StoreHealthStatus;
 import org.junit.jupiter.api.Test;
 
 class InventoryServiceTest {
@@ -19,7 +20,7 @@ class InventoryServiceTest {
         assertThat(response.healthy()).isEqualTo(response.totalProducts());
         assertThat(response.lowStock()).isZero();
         assertThat(response.outOfStock()).isZero();
-        assertThat(response.overallStatus()).isEqualTo("HEALTHY");
+        assertThat(response.overallStatus()).isEqualTo(StoreHealthStatus.HEALTHY);
     }
 
     @Test
@@ -32,7 +33,8 @@ class InventoryServiceTest {
         assertThat(response.healthy()).isZero();
         assertThat(response.lowStock()).isZero();
         assertThat(response.outOfStock()).isZero();
-        assertThat(response.overallStatus()).isEqualTo("NO_INVENTORY");
+        assertThat(response.overallStatus()).isEqualTo(StoreHealthStatus.NO_INVENTORY);
     }
 }
+
 

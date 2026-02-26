@@ -1,5 +1,6 @@
 package com.tw.joi.delivery.dto.response;
 
+import com.tw.joi.delivery.domain.StoreHealthStatus;
 import java.util.List;
 
 public record InventoryHealthResponse(
@@ -9,7 +10,7 @@ public record InventoryHealthResponse(
     int healthy,
     int lowStock,
     int outOfStock,
-    String overallStatus,
+    StoreHealthStatus overallStatus,
     List<ProductInventoryHealth> products
 ) {
 }
