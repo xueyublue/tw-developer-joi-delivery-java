@@ -51,7 +51,8 @@ class InventoryServiceTest {
         when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
         when(productRepository.findByStoreId(storeId)).thenReturn(List.of(product));
 
-        InventoryHealthResponse response = inventoryService.fetchInventoryHealth(storeId, true);
+        InventoryHealthResponse response =
+            inventoryService.fetchInventoryHealth(storeId, true, 0, 10);
 
         assertThat(response.storeId()).isEqualTo(storeId);
         assertThat(response.storeName()).isEqualTo("Fresh Picks");
@@ -95,7 +96,8 @@ class InventoryServiceTest {
         when(productRepository.findByStoreId(storeId))
             .thenReturn(List.of(lowStockProduct, outOfStockProduct));
 
-        InventoryHealthResponse response = inventoryService.fetchInventoryHealth(storeId, true);
+        InventoryHealthResponse response =
+            inventoryService.fetchInventoryHealth(storeId, true, 0, 10);
 
         assertThat(response.totalProducts()).isEqualTo(2);
         assertThat(response.lowStock()).isEqualTo(1);
@@ -108,7 +110,8 @@ class InventoryServiceTest {
         String unknownStoreId = "unknown-store";
         when(storeRepository.findById(unknownStoreId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> inventoryService.fetchInventoryHealth(unknownStoreId, true))
+        assertThatThrownBy(
+            () -> inventoryService.fetchInventoryHealth(unknownStoreId, true, 0, 10))
             .isInstanceOf(StoreNotFoundException.class)
             .hasMessageContaining(unknownStoreId);
     }
@@ -124,10 +127,59 @@ class InventoryServiceTest {
         when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
         when(productRepository.findByStoreId(storeId)).thenReturn(List.of());
 
-        InventoryHealthResponse response = inventoryService.fetchInventoryHealth(storeId, false);
+        InventoryHealthResponse response =
+            inventoryService.fetchInventoryHealth(storeId, false, 0, 10);
 
         assertThat(response.products()).isEmpty();
         assertThat(response.overallStatus()).isEqualTo(StoreHealthStatus.NO_INVENTORY);
+    }
+
+    @Test
+    void shouldPaginateProductsCorrectly() {
+        String storeId = "store101";
+        GroceryStore store = GroceryStore.builder()
+            .name("Fresh Picks")
+            .outletId(storeId)
+            .build();
+
+        GroceryProduct product1 = GroceryProduct.builder()
+            .productId("p1")
+            .productName("P1")
+            .mrp(BigDecimal.TEN)
+            .threshold(1)
+            .availableStock(5)
+            .store(store)
+            .build();
+
+        GroceryProduct product2 = GroceryProduct.builder()
+            .productId("p2")
+            .productName("P2")
+            .mrp(BigDecimal.TEN)
+            .threshold(1)
+            .availableStock(5)
+            .store(store)
+            .build();
+
+        when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+        when(productRepository.findByStoreId(storeId)).thenReturn(List.of(product1, product2));
+
+        InventoryHealthResponse page0 =
+            inventoryService.fetchInventoryHealth(storeId, true, 0, 1);
+
+        assertThat(page0.page()).isEqualTo(0);
+        assertThat(page0.size()).isEqualTo(1);
+        assertThat(page0.totalPages()).isEqualTo(2);
+        assertThat(page0.products()).hasSize(1);
+        assertThat(page0.products().get(0).productId()).isEqualTo("p1");
+
+        InventoryHealthResponse page1 =
+            inventoryService.fetchInventoryHealth(storeId, true, 1, 1);
+
+        assertThat(page1.page()).isEqualTo(1);
+        assertThat(page1.size()).isEqualTo(1);
+        assertThat(page1.totalPages()).isEqualTo(2);
+        assertThat(page1.products()).hasSize(1);
+        assertThat(page1.products().get(0).productId()).isEqualTo("p2");
     }
 }
 

@@ -11,6 +11,9 @@ public record InventoryHealthResponse(
     int lowStock,
     int outOfStock,
     StoreHealthStatus overallStatus,
+    int page,
+    int size,
+    int totalPages,
     List<ProductInventoryHealth> products
 ) {
 }

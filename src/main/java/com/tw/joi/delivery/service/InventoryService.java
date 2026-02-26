@@ -20,7 +20,10 @@ public class InventoryService {
     private final GroceryProductRepository productRepository;
     private final GroceryStoreRepository storeRepository;
 
-    public InventoryHealthResponse fetchInventoryHealth(String storeId, boolean includeProducts) {
+    public InventoryHealthResponse fetchInventoryHealth(String storeId,
+                                                        boolean includeProducts,
+                                                        int page,
+                                                        int size) {
         GroceryStore store = storeRepository.findById(storeId)
             .orElseThrow(() -> new StoreNotFoundException(storeId));
 
@@ -46,6 +49,27 @@ public class InventoryService {
                                    (int) lowStockCount,
                                    (int) outOfStockCount);
 
+        int resolvedSize = size <= 0 ? totalProducts == 0 ? 1 : totalProducts : size;
+        int totalPages =
+            totalProducts == 0 ? 0 : (int) Math.ceil((double) totalProducts / resolvedSize);
+        int resolvedPage = Math.max(page, 0);
+        if (resolvedPage >= totalPages && totalPages > 0) {
+            resolvedPage = totalPages - 1;
+        }
+
+        List<ProductInventoryHealth> pagedProducts;
+        if (!includeProducts || totalProducts == 0) {
+            pagedProducts = List.of();
+        } else {
+            int fromIndex = resolvedPage * resolvedSize;
+            int toIndex = Math.min(fromIndex + resolvedSize, totalProducts);
+            if (fromIndex >= totalProducts) {
+                pagedProducts = List.of();
+            } else {
+                pagedProducts = productHealthList.subList(fromIndex, toIndex);
+            }
+        }
+
         return new InventoryHealthResponse(
             storeId,
             store.getName(),
@@ -54,7 +78,10 @@ public class InventoryService {
             (int) lowStockCount,
             (int) outOfStockCount,
             overallStatus,
-            includeProducts ? productHealthList : List.of()
+            resolvedPage,
+            resolvedSize,
+            totalPages,
+            pagedProducts
         );
     }
 

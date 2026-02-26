@@ -20,7 +20,12 @@ public class InventoryController {
     public ResponseEntity<InventoryHealthResponse> fetchStoreInventoryHealth(
         @RequestParam(name = "storeId") String storeId,
         @RequestParam(name = "includeProducts", required = false, defaultValue = "true")
-        boolean includeProducts) {
-        return ResponseEntity.ok(inventoryService.fetchInventoryHealth(storeId, includeProducts));
+        boolean includeProducts,
+        @RequestParam(name = "page", required = false, defaultValue = "0")
+        int page,
+        @RequestParam(name = "size", required = false, defaultValue = "10")
+        int size) {
+        return ResponseEntity.ok(
+            inventoryService.fetchInventoryHealth(storeId, includeProducts, page, size));
     }
 }
