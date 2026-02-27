@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class GroceryProduct extends Product {
+public class GroceryProduct extends Product implements InventoryCapable {
 
     private BigDecimal sellingPrice;
     private BigDecimal weight;

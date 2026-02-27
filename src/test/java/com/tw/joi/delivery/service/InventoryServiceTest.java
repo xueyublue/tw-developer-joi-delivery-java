@@ -2,15 +2,19 @@ package com.tw.joi.delivery.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import com.tw.joi.delivery.domain.GroceryProduct;
 import com.tw.joi.delivery.domain.GroceryStore;
+import com.tw.joi.delivery.domain.InventoryCapable;
 import com.tw.joi.delivery.domain.ProductHealthStatus;
 import com.tw.joi.delivery.domain.StoreHealthStatus;
 import com.tw.joi.delivery.dto.response.InventoryHealthResponse;
-import com.tw.joi.delivery.repository.GroceryProductRepository;
-import com.tw.joi.delivery.repository.GroceryStoreRepository;
+import com.tw.joi.delivery.dto.response.ProductInventoryHealth;
+import com.tw.joi.delivery.repository.OutletRepository;
+import com.tw.joi.delivery.service.inventory.GroceryStoreInventoryHandler;
+import com.tw.joi.delivery.service.inventory.StoreInventoryHandlerFactory;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -20,15 +24,17 @@ import org.mockito.Mockito;
 
 class InventoryServiceTest {
 
-    private GroceryProductRepository productRepository;
-    private GroceryStoreRepository storeRepository;
+    private OutletRepository outletRepository;
+    private StoreInventoryHandlerFactory handlerFactory;
+    private GroceryStoreInventoryHandler groceryHandler;
     private InventoryService inventoryService;
 
     @BeforeEach
     void setUp() {
-        productRepository = Mockito.mock(GroceryProductRepository.class);
-        storeRepository = Mockito.mock(GroceryStoreRepository.class);
-        inventoryService = new InventoryService(productRepository, storeRepository);
+        outletRepository = Mockito.mock(OutletRepository.class);
+        handlerFactory = Mockito.mock(StoreInventoryHandlerFactory.class);
+        groceryHandler = Mockito.mock(GroceryStoreInventoryHandler.class);
+        inventoryService = new InventoryService(outletRepository, handlerFactory);
     }
 
     @Test
@@ -48,8 +54,18 @@ class InventoryServiceTest {
             .store(store)
             .build();
 
-        when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
-        when(productRepository.findByStoreId(storeId)).thenReturn(List.of(product));
+        ProductInventoryHealth productHealth = new ProductInventoryHealth(
+            "product101",
+            "Wheat Bread",
+            10,
+            30,
+            ProductHealthStatus.HEALTHY
+        );
+
+        when(outletRepository.findById(storeId)).thenReturn(Optional.of(store));
+        when(handlerFactory.getHandler(store)).thenReturn(groceryHandler);
+        doReturn(List.of(product)).when(groceryHandler).getProducts(storeId);
+        when(groceryHandler.toProductInventoryHealth(product)).thenReturn(productHealth);
 
         InventoryHealthResponse response = inventoryService.fetchInventoryHealth(storeId, true);
 
@@ -91,9 +107,27 @@ class InventoryServiceTest {
             .store(store)
             .build();
 
-        when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
-        when(productRepository.findByStoreId(storeId))
-            .thenReturn(List.of(lowStockProduct, outOfStockProduct));
+        ProductInventoryHealth lowStockHealth = new ProductInventoryHealth(
+            "productLow",
+            "Low Stock Item",
+            10,
+            5,
+            ProductHealthStatus.LOW_STOCK
+        );
+
+        ProductInventoryHealth outOfStockHealth = new ProductInventoryHealth(
+            "productOut",
+            "Out Of Stock Item",
+            10,
+            0,
+            ProductHealthStatus.OUT_OF_STOCK
+        );
+
+        when(outletRepository.findById(storeId)).thenReturn(Optional.of(store));
+        when(handlerFactory.getHandler(store)).thenReturn(groceryHandler);
+        doReturn(List.of(lowStockProduct, outOfStockProduct)).when(groceryHandler).getProducts(storeId);
+        when(groceryHandler.toProductInventoryHealth(lowStockProduct)).thenReturn(lowStockHealth);
+        when(groceryHandler.toProductInventoryHealth(outOfStockProduct)).thenReturn(outOfStockHealth);
 
         InventoryHealthResponse response = inventoryService.fetchInventoryHealth(storeId, true);
 
@@ -106,7 +140,7 @@ class InventoryServiceTest {
     @Test
     void shouldThrowStoreNotFoundExceptionWhenStoreDoesNotExist() {
         String unknownStoreId = "unknown-store";
-        when(storeRepository.findById(unknownStoreId)).thenReturn(Optional.empty());
+        when(outletRepository.findById(unknownStoreId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> inventoryService.fetchInventoryHealth(unknownStoreId, true))
             .isInstanceOf(StoreNotFoundException.class)
@@ -121,8 +155,9 @@ class InventoryServiceTest {
             .outletId(storeId)
             .build();
 
-        when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
-        when(productRepository.findByStoreId(storeId)).thenReturn(List.of());
+        when(outletRepository.findById(storeId)).thenReturn(Optional.of(store));
+        when(handlerFactory.getHandler(store)).thenReturn(groceryHandler);
+        doReturn(List.<InventoryCapable>of()).when(groceryHandler).getProducts(storeId);
 
         InventoryHealthResponse response = inventoryService.fetchInventoryHealth(storeId, false);
 
