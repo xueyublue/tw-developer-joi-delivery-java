@@ -2,6 +2,8 @@ package com.tw.joi.delivery.controller;
 
 import com.tw.joi.delivery.dto.response.InventoryHealthResponse;
 import com.tw.joi.delivery.service.InventoryService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +20,8 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
     @GetMapping("/health")
-    public ResponseEntity<InventoryHealthResponse> fetchStoreInventoryHealth(@RequestParam(name = "storeId") String storeId) {
+    public ResponseEntity<InventoryHealthResponse> fetchStoreInventoryHealth(
+            @Valid @NotBlank @RequestParam(name = "storeId") String storeId) {
         return ResponseEntity.ok(inventoryService.fetchInventoryHealth(storeId));
     }
 }
