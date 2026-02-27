@@ -7,29 +7,26 @@ import com.tw.joi.delivery.domain.StoreHealthStatus;
 import com.tw.joi.delivery.dto.response.InventoryHealthResponse;
 import com.tw.joi.delivery.dto.response.ProductInventoryHealth;
 import com.tw.joi.delivery.exception.StoreNotFoundException;
-import com.tw.joi.delivery.seedData.SeedData;
+import com.tw.joi.delivery.repository.GroceryProductRepository;
+import com.tw.joi.delivery.repository.GroceryStoreRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class InventoryService {
 
-    private final Map<String, Outlet> stores = SeedData.groceryStores;
-    private final List<GroceryProduct> products = SeedData.groceryProducts;
+    private final GroceryStoreRepository storeRepository;
+    private final GroceryProductRepository productRepository;
 
     public InventoryHealthResponse fetchInventoryHealth(String storeId) {
         // find the store first
-        Outlet store = stores.get(storeId);
-        if (store == null) {
-            throw new StoreNotFoundException(storeId);
-        }
+        Outlet store = storeRepository.findByStoreId(storeId).orElseThrow(() -> new StoreNotFoundException(storeId));
 
         // find the products
-        List<GroceryProduct> storeProducts = products.stream()
-                .filter(item -> item.getStore().getOutletId().equals(storeId))
-                .toList();
+        List<GroceryProduct> storeProducts = productRepository.findByStoreId(storeId);
 
         // determine product health
         List<ProductInventoryHealth> productHealthList = storeProducts.stream()
